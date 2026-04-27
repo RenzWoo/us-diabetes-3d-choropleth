@@ -66,35 +66,4 @@ install.packages(c("sf", "dplyr", "ggplot2", "readr", "stringr",
 
 > ⚠️ **Render time warning:** The final `render_highquality()` step runs at 2400×3000px with 300 samples and parallel rendering enabled. Expect **30–90 minutes** depending on your CPU/RAM. The intermediate 2D map and 3D preview will render much faster.
 
----
 
-## Folder Structure
-
-```
-us-diabetes-3d-choropleth/
-├── README.md
-├── 3D_choropleth_US.Rmd
-├── 3D-population_A3.png            ← poster visual
-├── data/
-│   ├── Complete_Merged_DiabetesAtlas_CountyData.csv
-│   └── National Sub-State Geography.gpkg
-└── outputs/
-    └── USA_diabetes_3d_map.png     ← high-res render output
-```
-
----
-
-## .gitignore
-
-Add the following to avoid committing large temp files:
-
-```
-*.rgl
-*.rds
-*.RData
-.Rhistory
-.Rproj.user/
-outputs/USA_diabetes_3d_map.png
-```
-
-> The high-res render output (`USA_diabetes_3d_map.png`) is excluded by default due to file size. The poster (`3D-population_A3.png`) is committed directly to the root for README display.
