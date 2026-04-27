@@ -1,0 +1,114 @@
+---
+title: |
+  | DS221
+  | Data Visualization and Storytelling
+subtitle: |
+  | --------------------------------------------------
+  | PORTFOLIO 1
+  | Members: RenzWoo
+  | --------------------------------------------------
+output: pdf_document
+---
+``` {r}
+library(sf) 
+library(dplyr)   
+library(ggplot2) 
+library("readr")
+library(stringr)
+library(raster)
+library(stars)
+library(rayshader)
+library(MetBrewer) 
+library(gridExtra)
+```
+# Load data
+```{r}
+chronic_data <- read_csv("3d choropleth  population map/Complete_Merged_DiabetesAtlas_CountyData.csv")
+us_gpkg_path <- "3d choropleth  population map/National Sub-State Geography.gpkg" 
+print(st_layers(us_gpkg_path) )
+print(colnames(chronic_data))
+```
+
+# Choose Layer (County)
+```{r}
+us_boundaries <- st_read(us_gpkg_path, layer = "County")
+```
+
+# Filter out Dataset
+```{r} 
+us_mainland <- us_boundaries %>%
+  filter(!substr(GEOID, 1, 2) %in% c("02", "15", "72", "66", "60", "69", "78")) 
+```
+
+## Merge chronic_data and us_boundaries data
+```{r}
+us_boundaries <- us_boundaries %>%
+  mutate(GEOID = as.character(GEOID))
+
+chronic_data <- chronic_data %>%
+  mutate(CountyFIPS = str_pad(CountyFIPS, width = 5, side = "left", pad = "0"))
+
+chronic_data <- chronic_data %>%
+  mutate(CountyFIPS = str_trim(CountyFIPS))
+```
+
+```{r}
+merged_data <- us_boundaries %>%
+  left_join(chronic_data, by = c("GEOID" = "CountyFIPS")) %>%
+  filter(!str_sub(GEOID, 1, 2) %in% c("02", "15", "72", "66", "60", "69", "78"))
+```
+
+# PLOT 2D MAP 
+```{r, fig.width=16, fig.height=8}
+c <- "Isfahan1"
+color1 <- met.brewer(c)
+
+diabetes_map <- ggplot(merged_data) +
+  geom_sf(aes(fill = as.numeric(Percentage)), color = NA) +
+  scale_fill_gradientn(colors = rev(color1),
+                       name = "Diabetes (%)",
+                       na.value = "grey50") +
+  theme_minimal() +
+  labs(title = "Diabetes Distribution in the U.S.: A County-Level Analysis",
+       caption = "Source: CDC Diabetes Atlas | Visualization created with R") +
+  theme(legend.position = "right",
+        panel.background = element_rect(fill = "white", color=NA),
+        plot.background = element_rect(fill = "white", color = NA),)
+
+      
+print(diabetes_map)
+```
+
+```{r}
+plot_gg(diabetes_map,
+        multicore = TRUE,
+        width = 9,
+        height = 6,
+        scale = 180,
+        shadow = TRUE,                  
+        shadow_intensity = 0.6,     
+        sunangle = 125,         
+        windowsize = c(1600, 1200),  
+        zoom = 0.54,
+        phi =   35.6,
+        theta = -53.6,
+        background = "white", 
+        shadowcolor = "gray30",
+        solid = FALSE       # Keep platform
+)
+```
+
+
+```{r}
+render_camera()
+```
+
+```{r}
+render_highquality(filename = "USA_diabetes_3d_map.png",
+                   parallel = TRUE, 
+                   samples = 300,        
+                   width = 2400,      
+                   height = 3000)      
+
+rgl::close3d()
+```
